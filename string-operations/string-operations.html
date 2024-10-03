@@ -1,115 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>String Operations Demo</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      rel="stylesheet"
+    />
     <style>
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 300px;
-            background-color: #555;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -150px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            word-wrap: break-word;
-        }
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-        .result-container {
-            display: grid;
-            grid-template-columns: 150px 1fr 40px;
-            gap: 10px;
-            align-items: center;
-        }
-        .result-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+      #results {
+        grid-template-columns: 100px minmax(0, 1fr) 50px;
+      }
+      .tooltip {
+        position: relative;
+        display: block;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      .tooltipresult {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+      }
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        text-align: center;
+        width: 400px;
+        word-wrap: break-word;
+        z-index: 1;
+        padding: 5px;
+        color: #fff;
+        border-radius: 6px;
+        background-color: #555;
+        position: absolute;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+      }
     </style>
-</head>
-<body class="bg-gray-100 p-8">
-    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h1 class="text-2xl font-bold mb-4">String Operations Demo</h1>
-        <input type="text" id="inputString" placeholder="Enter a string" class="w-full p-2 border rounded mb-4">
-        <div id="results" class="mt-4"></div>
+  </head>
+  <body class="bg-gray-100 p-8">
+    <div class="w-full mx-auto bg-white p-6 rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold mb-4">String Operations Demo</h1>
+      <textarea
+        id="inputString"
+        placeholder="Enter a string"
+        class="w-full p-2 border rounded mb-4"
+      >
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</textarea
+      >
+      <div class="w-full">
+        <div id="results" class="grid grid-cols-[100px_1fr_50px] gap-2"></div>
+      </div>
     </div>
-
     <script>
-        const inputString = document.getElementById('inputString');
-        const resultsDiv = document.getElementById('results');
+      const inputString = document.getElementById("inputString");
+      const resultsContainer = document.getElementById("results");
 
-        inputString.addEventListener('input', performOperations);
+      inputString.addEventListener("input", performOperations);
 
-        function performOperations() {
-            const input = inputString.value;
-            resultsDiv.innerHTML = ''; // Clear previous results
+      function performOperations() {
+        const input = inputString.value;
+        resultsContainer.innerHTML = ""; // Clear previous results
 
-            const operations = [
-                { name: 'Length', result: input.length },
-                { name: 'Uppercase', result: input.toUpperCase() },
-                { name: 'Lowercase', result: input.toLowerCase() },
-                { name: 'Base64 Encoded', result: btoa(unescape(encodeURIComponent(input))) },
-                { name: 'Reversed', result: input.split('').reverse().join('') },
-                { name: 'Without Spaces', result: input.replace(/\s/g, '') },
-                { name: 'Character Count', result: JSON.stringify(countCharacters(input)) },
-                { name: 'First Word', result: input.split(' ')[0] },
-                { name: 'Capitalized Words', result: capitalizeWords(input) }
-            ];
+        const operations = [
+          { name: "Length", result: input.length },
+          { name: "Uppercase", result: input.toUpperCase() },
+          { name: "Lowercase", result: input.toLowerCase() },
+          {
+            name: "Base64 Encoded",
+            result: btoa(unescape(encodeURIComponent(input))),
+          },
+          { name: "Reversed", result: input.split("").reverse().join("") },
+          { name: "Without Spaces", result: input.replace(/\s/g, "") },
+          {
+            name: "Character Count",
+            result: JSON.stringify(countCharacters(input)),
+          },
+          { name: "First Word", result: input.split(" ")[0] },
+          { name: "Capitalized Words", result: capitalizeWords(input) },
+        ];
 
-            operations.forEach(op => {
-                const resultElem = document.createElement('div');
-                resultElem.className = 'result-container mb-2';
-                resultElem.innerHTML = `
-                    <strong>${op.name}:</strong>
-                    <div class="tooltip">
-                        <span class="result-text bg-gray-100 p-1 rounded block">${op.result}</span>
-                        <span class="tooltiptext">${op.result}</span>
-                    </div>
-                    <button onclick="copyToClipboard('${op.result}')" class="bg-blue-500 text-white p-1 rounded">
+        ["Operation", "Result", "Copy"].forEach((header) => {
+          const headerElem = document.createElement("div");
+          headerElem.textContent = header;
+          resultsContainer.appendChild(headerElem);
+        });
+
+        operations.forEach((op) => {
+          const titleElem = document.createElement("div");
+          const contentElem = document.createElement("div");
+          const copyElem = document.createElement("div");
+
+          titleElem.textContent = op.name;
+          contentElem.innerHTML = `
+                <div class="tooltip">
+                    <div class="tooltipresult">${op.result}</div>
+                    <span class="tooltiptext">${op.result}</span>
+                </div>
+                `;
+          copyElem.innerHTML = `
+                    <button onclick="copyToClipboard('${op.result}')">
                         <i class="fas fa-copy"></i>
                     </button>
                 `;
-                resultsDiv.appendChild(resultElem);
-            });
-        }
 
-        function countCharacters(str) {
-            return str.split('').reduce((acc, char) => {
-                acc[char] = (acc[char] || 0) + 1;
-                return acc;
-            }, {});
-        }
+          resultsContainer.appendChild(titleElem);
+          resultsContainer.appendChild(contentElem);
+          resultsContainer.appendChild(copyElem);
+        });
+      }
 
-        function capitalizeWords(str) {
-            return str.replace(/\b\w/g, c => c.toUpperCase());
-        }
+      function countCharacters(str) {
+        return str.split("").reduce((acc, char) => {
+          acc[char] = (acc[char] || 0) + 1;
+          return acc;
+        }, {});
+      }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Copied to clipboard!');
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
-            });
-        }
+      function capitalizeWords(str) {
+        return str.replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            // TODO: reflect copied in the page (maybe toast?)
+          })
+          .catch((err) => {
+            console.error("Failed to copy: ", err);
+          });
+      }
+
+      performOperations();
     </script>
-</body>
+  </body>
 </html>
