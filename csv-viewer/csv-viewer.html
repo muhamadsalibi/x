@@ -31,10 +31,10 @@
         #file-input {
             display: none;
         }
-		#file-name {
-			font-weight: bold;
-			margin-bottom: 10px;
-		}
+        #file-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
         #csv-content {
             width: 100%;
             overflow-x: auto;
@@ -52,12 +52,19 @@
         th {
             background-color: #f2f2f2;
             font-weight: bold;
+            cursor: pointer;
+        }
+        th:hover {
+            background-color: #e6e6e6;
         }
         .row-number {
             width: 30px;
             background-color: #f2f2f2;
             text-align: right;
             font-weight: bold;
+        }
+        .sort-arrow {
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -67,13 +74,17 @@
         <p>Drag and drop a CSV file here or click to select a file</p>
         <input type="file" id="file-input" accept=".csv">
     </div>
-	<div id="file-name"></div>
+    <div id="file-name"></div>
     <div id="csv-content"></div>
 
     <script>
         const dropArea = document.getElementById('drop-area');
         const fileInput = document.getElementById('file-input');
         const csvContent = document.getElementById('csv-content');
+        let csvData = [];
+        let originalCsvData = [];
+        let currentSortColumn = -1;
+        let currentSortOrder = 'none';
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, preventDefaults, false);
@@ -114,20 +125,21 @@
             const file = e.target.files[0];
             handleFile(file);
         }
-		
-		function displayFileName(fileName) {
-			const fileNameElement = document.getElementById('file-name');
-			fileNameElement.textContent = `File: ${fileName}`;
-		}
-		
+
+        function displayFileName(fileName) {
+            const fileNameElement = document.getElementById('file-name');
+            fileNameElement.textContent = `File: ${fileName}`;
+        }
+
         function handleFile(file) {
             const reader = new FileReader();
-			reader.onload = function(e) {
-				const content = e.target.result;
-				displayFileName(file.name);
-				displayCSV(content);
-			};
-			reader.readAsText(file);
+            reader.onload = function(e) {
+                const content = e.target.result;
+                displayFileName(file.name);
+                parseCSV(content);
+                displayCSV();
+            };
+            reader.readAsText(file);
         }
 
         function detectSeparator(content) {
@@ -164,25 +176,27 @@
             return cells;
         }
 
-        function displayCSV(content) {
+        function parseCSV(content) {
             const separator = detectSeparator(content);
             const rows = content.split('\n');
+            csvData = rows.filter(row => row.trim() !== '').map(row => parseCSVRow(row, separator));
+            originalCsvData = [...csvData];
+        }
+
+        function displayCSV() {
             let tableHtml = '<table>';
             
-            rows.forEach((row, rowIndex) => {
-                if (row.trim() === '') return;  // Skip empty rows
-                
-                const cells = parseCSVRow(row, separator);
-                
+            csvData.forEach((row, rowIndex) => {
                 if (rowIndex === 0) {
                     tableHtml += '<tr><th class="row-number">#</th>';
-                    cells.forEach(cell => {
-                        tableHtml += `<th>${cell}</th>`;
+                    row.forEach((cell, cellIndex) => {
+                        const sortArrow = cellIndex === currentSortColumn ? getSortArrow(currentSortOrder) : '';
+                        tableHtml += `<th onclick="sortTable(${cellIndex})">${cell}${sortArrow}</th>`;
                     });
                     tableHtml += '</tr>';
                 } else {
                     tableHtml += `<tr><td class="row-number">${rowIndex}</td>`;
-                    cells.forEach(cell => {
+                    row.forEach(cell => {
                         tableHtml += `<td>${cell}</td>`;
                     });
                     tableHtml += '</tr>';
@@ -191,6 +205,48 @@
             
             tableHtml += '</table>';
             csvContent.innerHTML = tableHtml;
+        }
+
+        function getSortArrow(order) {
+            switch (order) {
+                case 'asc':
+                    return '<span class="sort-arrow">&#9650;</span>';
+                case 'desc':
+                    return '<span class="sort-arrow">&#9660;</span>';
+                default:
+                    return '';
+            }
+        }
+
+        function sortTable(columnIndex) {
+            if (currentSortColumn === columnIndex) {
+                // Cycle through sort orders
+                currentSortOrder = currentSortOrder === 'none' ? 'asc' : (currentSortOrder === 'asc' ? 'desc' : 'none');
+            } else {
+                currentSortColumn = columnIndex;
+                currentSortOrder = 'asc';
+            }
+
+            if (currentSortOrder === 'none') {
+                // Restore original order
+                csvData = [...originalCsvData];
+                currentSortColumn = -1;
+            } else {
+                const header = csvData[0];
+                const body = csvData.slice(1);
+
+                body.sort((a, b) => {
+                    const valueA = a[columnIndex].toLowerCase();
+                    const valueB = b[columnIndex].toLowerCase();
+                    if (valueA < valueB) return currentSortOrder === 'asc' ? -1 : 1;
+                    if (valueA > valueB) return currentSortOrder === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                csvData = [header, ...body];
+            }
+
+            displayCSV();
         }
     </script>
 </body>
