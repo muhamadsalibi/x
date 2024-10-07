@@ -3,250 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV File Uploader and Viewer</title>
+    <title>CSV File Viewer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            width: 100%;
-            max-width: 100%;
-        }
-        h1 {
-            margin-top: 0;
+            margin: 20px;
         }
         #drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 20px;
-            width: 100%;
-            padding: 20px;
+            border: 3px dashed #ccc;
+            padding: 50px;
             text-align: center;
-            box-sizing: border-box;
+            color: #aaa;
             margin-bottom: 20px;
-        }
-        #drop-area.highlight {
-            border-color: #000;
-        }
-        #file-input {
-            display: none;
-        }
-        #file-name {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        #csv-content {
-            width: 100%;
-            overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            white-space: nowrap;
         }
         th {
-            background-color: #f2f2f2;
-            font-weight: bold;
+            background-color: #f4f4f4;
             cursor: pointer;
         }
         th:hover {
-            background-color: #e6e6e6;
+            background-color: #e2e2e2;
         }
-        .row-number {
-            width: 30px;
-            background-color: #f2f2f2;
-            text-align: right;
+        #file-name {
             font-weight: bold;
-        }
-        .sort-arrow {
-            margin-left: 5px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>CSV File Uploader and Viewer</h1>
-    <div id="drop-area">
-        <p>Drag and drop a CSV file here or click to select a file</p>
-        <input type="file" id="file-input" accept=".csv">
-    </div>
+    <h2>Drag and Drop CSV Viewer</h2>
+    <div id="drop-area">Drop CSV file here or click to upload</div>
+    <input type="file" id="file-input" accept=".csv" style="display: none;" />
     <div id="file-name"></div>
-    <div id="csv-content"></div>
+    <div id="table-container"></div>
 
     <script>
         const dropArea = document.getElementById('drop-area');
         const fileInput = document.getElementById('file-input');
-        const csvContent = document.getElementById('csv-content');
-        let csvData = [];
-        let originalCsvData = [];
-        let currentSortColumn = -1;
-        let currentSortOrder = 'none';
+        const fileNameDisplay = document.getElementById('file-name');
+        let originalData = [];
 
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight() {
-            dropArea.classList.add('highlight');
-        }
-
-        function unhighlight() {
-            dropArea.classList.remove('highlight');
-        }
-
-        dropArea.addEventListener('drop', handleDrop, false);
-        fileInput.addEventListener('change', handleFileSelect, false);
         dropArea.addEventListener('click', () => fileInput.click());
 
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const file = dt.files[0];
-            handleFile(file);
-        }
+        fileInput.addEventListener('change', handleFile);
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.style.borderColor = '#000';
+        });
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.style.borderColor = '#ccc';
+        });
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.style.borderColor = '#ccc';
+            handleFile(event);
+        });
 
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            handleFile(file);
-        }
-
-        function displayFileName(fileName) {
-            const fileNameElement = document.getElementById('file-name');
-            fileNameElement.textContent = `File: ${fileName}`;
-        }
-
-        function handleFile(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const content = e.target.result;
-                displayFileName(file.name);
-                parseCSV(content);
-                displayCSV();
-            };
-            reader.readAsText(file);
-        }
-
-        function detectSeparator(content) {
-            const firstLine = content.split('\n')[0];
-            const commaCount = (firstLine.match(/,/g) || []).length;
-            const semicolonCount = (firstLine.match(/;/g) || []).length;
-            return commaCount > semicolonCount ? ',' : ';';
-        }
-
-        function parseCSVRow(row, separator) {
-            const cells = [];
-            let cell = '';
-            let inQuotes = false;
-            
-            for (let i = 0; i < row.length; i++) {
-                const char = row[i];
-                
-                if (char === '"') {
-                    if (inQuotes && row[i + 1] === '"') {
-                        cell += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (char === separator && !inQuotes) {
-                    cells.push(cell.trim());
-                    cell = '';
-                } else {
-                    cell += char;
-                }
+        function handleFile(event) {
+            const file = event.target.files ? event.target.files[0] : event.dataTransfer.files[0];
+            if (file && file.type === 'text/csv') {
+                fileNameDisplay.textContent = `Uploaded File: ${file.name}`;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    parseCSV(text);
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Please upload a valid CSV file.');
             }
-            
-            cells.push(cell.trim());
-            return cells;
         }
 
-        function parseCSV(content) {
-            const separator = detectSeparator(content);
-            const rows = content.split('\n');
-            csvData = rows.filter(row => row.trim() !== '').map(row => parseCSVRow(row, separator));
-            originalCsvData = [...csvData];
-        }
-
-        function displayCSV() {
-            let tableHtml = '<table>';
-            
-            csvData.forEach((row, rowIndex) => {
-                if (rowIndex === 0) {
-                    tableHtml += '<tr><th class="row-number">#</th>';
-                    row.forEach((cell, cellIndex) => {
-                        const sortArrow = cellIndex === currentSortColumn ? getSortArrow(currentSortOrder) : '';
-                        tableHtml += `<th onclick="sortTable(${cellIndex})">${cell}${sortArrow}</th>`;
-                    });
-                    tableHtml += '</tr>';
-                } else {
-                    tableHtml += `<tr><td class="row-number">${rowIndex}</td>`;
-                    row.forEach(cell => {
-                        tableHtml += `<td>${cell}</td>`;
-                    });
-                    tableHtml += '</tr>';
-                }
+        function parseCSV(text) {
+            const delimiter = text.includes(';') ? ';' : ',';
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+            originalData = lines.map(line => {
+                const cells = line.split(delimiter);
+                return cells.map(cell => cell.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
             });
-            
-            tableHtml += '</table>';
-            csvContent.innerHTML = tableHtml;
+            renderTable(originalData);
         }
 
-        function getSortArrow(order) {
-            switch (order) {
-                case 'asc':
-                    return '<span class="sort-arrow">&#9650;</span>';
-                case 'desc':
-                    return '<span class="sort-arrow">&#9660;</span>';
-                default:
-                    return '';
+        function renderTable(data) {
+            const tableContainer = document.getElementById('table-container');
+            tableContainer.innerHTML = '';
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            if (data.length > 0) {
+                const headers = data[0];
+                const headerRow = document.createElement('tr');
+                headers.forEach((header, index) => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    th.dataset.index = index;
+                    th.addEventListener('click', () => sortTable(index));
+                    if (currentSort.index === index) {
+                        th.textContent += currentSort.ascending ? ' ▲' : ' ▼';
+                    }
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                data.slice(1).forEach(row => {
+                    const rowElement = document.createElement('tr');
+                    row.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell || ""; // Ensure empty cells are handled properly
+                        rowElement.appendChild(td);
+                    });
+                    tbody.appendChild(rowElement);
+                });
+                table.appendChild(tbody);
+                tableContainer.appendChild(table);
             }
         }
 
-        function sortTable(columnIndex) {
-            if (currentSortColumn === columnIndex) {
-                // Cycle through sort orders
-                currentSortOrder = currentSortOrder === 'none' ? 'asc' : (currentSortOrder === 'asc' ? 'desc' : 'none');
-            } else {
-                currentSortColumn = columnIndex;
-                currentSortOrder = 'asc';
-            }
+        let currentSort = {
+            index: -1,
+            ascending: true
+        };
 
-            if (currentSortOrder === 'none') {
-                // Restore original order
-                csvData = [...originalCsvData];
-                currentSortColumn = -1;
+        function sortTable(index) {
+            let sortedData;
+            if (currentSort.index === index) {
+                if (currentSort.ascending) {
+                    currentSort.ascending = false;
+                    sortedData = [...originalData.slice(1)].sort((a, b) => {
+                        if (a[index] < b[index]) return 1;
+                        if (a[index] > b[index]) return -1;
+                        return 0;
+                    });
+                } else {
+                    currentSort.index = -1;
+                    currentSort.ascending = true;
+                    renderTable(originalData);
+                    return;
+                }
             } else {
-                const header = csvData[0];
-                const body = csvData.slice(1);
-
-                body.sort((a, b) => {
-                    const valueA = a[columnIndex].toLowerCase();
-                    const valueB = b[columnIndex].toLowerCase();
-                    if (valueA < valueB) return currentSortOrder === 'asc' ? -1 : 1;
-                    if (valueA > valueB) return currentSortOrder === 'asc' ? 1 : -1;
+                currentSort.index = index;
+                currentSort.ascending = true;
+                sortedData = [...originalData.slice(1)].sort((a, b) => {
+                    if (a[index] < b[index]) return -1;
+                    if (a[index] > b[index]) return 1;
                     return 0;
                 });
-
-                csvData = [header, ...body];
             }
-
-            displayCSV();
+            renderTable([originalData[0], ...sortedData]);
         }
     </script>
 </body>
