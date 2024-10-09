@@ -1,156 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>File Combiner</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        #dropZone {
-            border: 2px dashed #ccc;
-            border-radius: 20px;
-            width: 100%;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #dropZone.highlight {
-            border-color: #000;
-        }
-        #fileList {
-            list-style-type: none;
-            padding: 0;
-        }
-        #fileList li {
-            margin-bottom: 10px;
-        }
-        #downloadButton {
-            display: none;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      #dropZone {
+        border: 2px dashed #ccc;
+        border-radius: 20px;
+        width: 100%;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      #dropZone.highlight {
+        border-color: #000;
+      }
+      #fileList {
+        list-style-type: none;
+        padding: 0;
+      }
+      #fileList li {
+        margin-bottom: 10px;
+      }
+      #downloadButton {
+        display: none;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>File Combiner</h1>
     <div id="dropZone">
-        <p>Drag & drop files here or click to select files</p>
-        <input type="file" id="fileInput" multiple style="display: none;">
+      <p>Drag & drop files here or click to select files</p>
+      <input type="file" id="fileInput" multiple style="display: none" />
     </div>
     <ul id="fileList"></ul>
     <button id="downloadButton">Download Combined File</button>
 
     <script>
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-        const fileList = document.getElementById('fileList');
-        const downloadButton = document.getElementById('downloadButton');
-        let files = [];
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const fileList = document.getElementById("fileList");
+      const downloadButton = document.getElementById("downloadButton");
+      let files = [];
 
-        dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('highlight');
+      dropZone.addEventListener("click", () => fileInput.click());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("highlight");
+      });
+      dropZone.addEventListener("dragleave", () =>
+        dropZone.classList.remove("highlight")
+      );
+      dropZone.addEventListener("drop", handleDrop);
+      fileInput.addEventListener("change", handleFileSelect);
+      downloadButton.addEventListener("click", downloadCombinedFile);
+
+      function handleDrop(e) {
+        e.preventDefault();
+        dropZone.classList.remove("highlight");
+        const droppedFiles = e.dataTransfer.files;
+        handleFiles(droppedFiles);
+      }
+
+      function handleFileSelect(e) {
+        const selectedFiles = e.target.files;
+        handleFiles(selectedFiles);
+      }
+
+      function handleFiles(newFiles) {
+        files = [...files, ...Array.from(newFiles)];
+        updateFileList();
+        updateDownloadButton();
+      }
+
+      function updateFileList() {
+        fileList.innerHTML = "";
+        files.forEach((file, index) => {
+          const li = document.createElement("li");
+          li.textContent = file.name;
+          const removeButton = document.createElement("button");
+          removeButton.textContent = "Remove";
+          removeButton.onclick = () => removeFile(index);
+          li.appendChild(removeButton);
+          fileList.appendChild(li);
         });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('highlight'));
-        dropZone.addEventListener('drop', handleDrop);
-        fileInput.addEventListener('change', handleFileSelect);
-        downloadButton.addEventListener('click', downloadCombinedFile);
+      }
 
-        function handleDrop(e) {
-            e.preventDefault();
-            dropZone.classList.remove('highlight');
-            const droppedFiles = e.dataTransfer.files;
-            handleFiles(droppedFiles);
-        }
+      function removeFile(index) {
+        files.splice(index, 1);
+        updateFileList();
+        updateDownloadButton();
+      }
 
-        function handleFileSelect(e) {
-            const selectedFiles = e.target.files;
-            handleFiles(selectedFiles);
-        }
+      function updateDownloadButton() {
+        downloadButton.style.display = files.length > 0 ? "block" : "none";
+      }
 
-        function handleFiles(newFiles) {
-            files = [...files, ...Array.from(newFiles)];
-            updateFileList();
-            updateDownloadButton();
-        }
+      function downloadCombinedFile() {
+        let combinedContent = "";
+        let processedFiles = 0;
 
-        function updateFileList() {
-            fileList.innerHTML = '';
-            files.forEach((file, index) => {
-                const li = document.createElement('li');
-                li.textContent = file.name;
-                const removeButton = document.createElement('button');
-                removeButton.textContent = 'Remove';
-                removeButton.onclick = () => removeFile(index);
-                li.appendChild(removeButton);
-                fileList.appendChild(li);
-            });
-        }
+        files.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const content = e.target.result;
+            const fileExtension = file.name.split(".").pop().toLowerCase();
+            const commentedContent = addFileNameComment(
+              file.name,
+              fileExtension,
+              content
+            );
+            combinedContent += commentedContent + "\n\n";
 
-        function removeFile(index) {
-            files.splice(index, 1);
-            updateFileList();
-            updateDownloadButton();
-        }
-
-        function updateDownloadButton() {
-            downloadButton.style.display = files.length > 0 ? 'block' : 'none';
-        }
-
-        function downloadCombinedFile() {
-            let combinedContent = '';
-            let processedFiles = 0;
-
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const content = e.target.result;
-                    const fileExtension = file.name.split('.').pop().toLowerCase();
-                    const commentedContent = addFileNameComment(file.name, fileExtension, content);
-                    combinedContent += commentedContent + '\n\n';
-
-                    processedFiles++;
-                    if (processedFiles === files.length) {
-                        const blob = new Blob([combinedContent], { type: 'text/plain' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'combined_files.txt';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }
-                };
-                reader.readAsText(file);
-            });
-        }
-
-        function addFileNameComment(fileName, fileExtension, content) {
-            let commentStart, commentEnd;
-            switch (fileExtension) {
-                case 'js':
-                case 'ts':
-                case 'tsx':
-                    commentStart = '// ';
-                    commentEnd = '';
-                    break;
-                case 'py':
-                    commentStart = '# ';
-                    commentEnd = '';
-                    break;
-                default:
-                    commentStart = '// ';
-                    commentEnd = '';
+            processedFiles++;
+            if (processedFiles === files.length) {
+              const blob = new Blob([combinedContent], { type: "text/plain" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "combined_files.txt";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
             }
+          };
+          reader.readAsText(file);
+        });
+      }
 
-            const comment = `${commentStart}File: ${fileName}${commentEnd}\n`;
-            return comment + content;
+      function addFileNameComment(fileName, fileExtension, content) {
+        let commentStart, commentEnd;
+        switch (fileExtension) {
+          case "js":
+          case "ts":
+          case "tsx":
+            commentStart = "// ";
+            commentEnd = "";
+            break;
+          case "py":
+            commentStart = "# ";
+            commentEnd = "";
+            break;
+          default:
+            commentStart = "// ";
+            commentEnd = "";
         }
+
+        const comment = `${commentStart}File: ${fileName}${commentEnd}\n`;
+        return comment + content;
+      }
     </script>
-</body>
+  </body>
 </html>
