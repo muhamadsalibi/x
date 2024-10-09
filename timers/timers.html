@@ -4,83 +4,83 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sequential Timers</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-        text-align: center;
-      }
-      button {
-        margin: 10px;
-        padding: 10px 20px;
-        font-size: 16px;
-      }
-      #currentTimer {
-        font-size: 96px;
-        margin: 20px 0;
-      }
-      #progressBar {
-        width: 100%;
-        height: 20px;
-        background-color: #f0f0f0;
-        border-radius: 10px;
-        overflow: hidden;
-      }
-      #progressFill {
-        height: 100%;
-        width: 0;
-        background-color: #4caf50;
-        transition: width 1s linear;
-      }
-      .timer-input {
-        margin: 10px 0;
-        text-align: left;
-        display: flex;
-        align-items: center;
-      }
-      .timer-input input {
-        width: 50px;
-        margin-right: 5px;
-      }
-      .active-timer::before {
-        content: "▶ ";
-        color: #4caf50;
-      }
-      #loopContainer,
-      #soundContainer {
-        margin-top: 20px;
-      }
-      .remove-timer {
-        background-color: #ff4d4d;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        margin-left: 10px;
-        cursor: pointer;
-      }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div id="currentTimer">00:00</div>
-    <div id="progressBar">
-      <div id="progressFill"></div>
+  <body class="font-sans max-w-lg mx-auto p-5 text-center relative">
+    <div id="currentTimer" class="text-9xl my-5">00:00</div>
+    <div
+      id="progressBar"
+      class="w-full h-5 bg-gray-200 rounded-lg overflow-hidden"
+    >
+      <div
+        id="progressFill"
+        class="h-full w-0 bg-green-500 transition-all duration-1000 ease-linear"
+      ></div>
     </div>
-    <div id="timerInputs"></div>
-    <button id="addTimer">+</button>
-    <button id="startButton">▶</button>
-    <button id="resetButton">↺</button>
-    <div id="loopContainer">
-      <label for="loopCheckbox">
-        <input type="checkbox" id="loopCheckbox" /> Loop Timers
-      </label>
+
+    <!-- Hamburger Drawer Button -->
+    <button id="drawerToggle" class="fixed top-5 left-5 p-2 text-gray-700 z-50">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-8 w-8"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16m-7 6h7"
+        />
+      </svg>
+    </button>
+
+    <!-- Drawer Menu -->
+    <div
+      id="drawerMenu"
+      class="fixed top-0 left-0 w-80 h-full bg-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-40"
+    >
+      <div
+        class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-100"
+      >
+        <h2 class="text-xl font-bold">Timer Controls</h2>
+        <button id="closeDrawer" class="text-xl font-bold">&times;</button>
+      </div>
+      <div class="p-4 bg-gray-100 h-full overflow-y-auto">
+        <div id="timerInputs" class="my-5"></div>
+        <button
+          id="addTimer"
+          class="m-2 p-2 bg-blue-500 text-white text-lg rounded"
+        >
+          ➕
+        </button>
+        <button
+          id="startButton"
+          class="m-2 p-2 bg-green-500 text-white text-lg rounded"
+        >
+          &#9654;
+        </button>
+        <button
+          id="resetButton"
+          class="m-2 p-2 bg-yellow-500 text-white text-lg rounded"
+        >
+          🔄
+        </button>
+        <div id="loopContainer" class="mt-5">
+          <label for="loopCheckbox" class="inline-flex items-center">
+            <input type="checkbox" id="loopCheckbox" class="mr-2" /> Loop Timers
+          </label>
+        </div>
+        <div id="soundContainer" class="mt-5">
+          <label for="soundCheckbox" class="inline-flex items-center">
+            <input type="checkbox" id="soundCheckbox" class="mr-2" checked />
+            Enable Sound
+          </label>
+        </div>
+      </div>
     </div>
-    <div id="soundContainer">
-      <label for="soundCheckbox">
-        <input type="checkbox" id="soundCheckbox" checked /> Enable Sound
-      </label>
-    </div>
+
     <script>
       let timers = [];
       let currentTimerIndex = 0;
@@ -97,68 +97,100 @@
       const timerInputsContainer = document.getElementById("timerInputs");
       const loopCheckbox = document.getElementById("loopCheckbox");
       const soundCheckbox = document.getElementById("soundCheckbox");
+      const drawerToggleButton = document.getElementById("drawerToggle");
+      const drawerMenu = document.getElementById("drawerMenu");
+      const closeDrawerButton = document.getElementById("closeDrawer");
 
       addTimerButton.addEventListener("click", addTimer);
       startButton.addEventListener("click", startTimers);
       resetButton.addEventListener("click", resetTimers);
+      drawerToggleButton.addEventListener("click", toggleDrawer);
+      closeDrawerButton.addEventListener("click", toggleDrawer);
+
+      function toggleDrawer() {
+        drawerMenu.classList.toggle("-translate-x-full");
+        drawerToggleButton.classList.toggle("hidden");
+      }
+
+      function generateUUID() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+          /[xy]/g,
+          function (c) {
+            const r = (Math.random() * 16) | 0,
+              v = c === "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }
+        );
+      }
 
       function addTimer() {
-        const timerIndex = timers.length;
-        timers.push(300); // Default 5 minutes in seconds
+        const timerUUID = generateUUID();
+        timers.push({ id: timerUUID, duration: 300 }); // Default 5 minutes in seconds
 
         const timerInput = document.createElement("div");
-        timerInput.className = "timer-input";
+        timerInput.className = "timer-input my-2 text-left flex items-center";
+        timerInput.setAttribute("data-uuid", timerUUID);
         timerInput.innerHTML = `
-                <label id="timerLabel${timerIndex}">Timer ${
-          timerIndex + 1
-        }:</label>
-                <input type="number" value="5" min="0" id="timerMins${timerIndex}"> mins
-                <input type="number" value="0" min="0" max="59" id="timerSecs${timerIndex}"> secs
-                <button class="remove-timer" data-index="${timerIndex}">Remove</button>
+                <label class="mr-2">Timer ${timers.length}:</label>
+                <input type="number" value="5" min="0" class="w-16 mr-2 p-1 border border-gray-300 rounded" data-minutes> mins
+                <input type="number" value="0" min="0" max="59" class="w-16 ml-2 p-1 border border-gray-300 rounded" data-seconds> secs
+                <button class="remove-timer bg-red-500 text-white ml-2 p-1 rounded" data-uuid="${timerUUID}">🗑️</button>
             `;
         timerInputsContainer.appendChild(timerInput);
 
-        const minsInput = timerInput.querySelector(`#timerMins${timerIndex}`);
-        const secsInput = timerInput.querySelector(`#timerSecs${timerIndex}`);
+        const minsInput = timerInput.querySelector(`[data-minutes]`);
+        const secsInput = timerInput.querySelector(`[data-seconds]`);
         const removeButton = timerInput.querySelector(".remove-timer");
 
         function updateTimer() {
           const mins = parseInt(minsInput.value) || 0;
           const secs = parseInt(secsInput.value) || 0;
-          timers[timerIndex] = mins * 60 + secs;
-          if (currentTimerIndex === timerIndex && !isRunning) {
-            timeLeft = timers[timerIndex];
+          const timer = timers.find((t) => t.id === timerUUID);
+          if (timer) {
+            timer.duration = mins * 60 + secs;
+          }
+          if (
+            currentTimerIndex < timers.length &&
+            timers[currentTimerIndex].id === timerUUID &&
+            !isRunning
+          ) {
+            timeLeft = timer.duration;
             updateDisplay();
           }
         }
 
         minsInput.addEventListener("change", updateTimer);
         secsInput.addEventListener("change", updateTimer);
-        // TODO: this logic does not work when another timer is removed and indexes are shifted.
-        // we either need to update the indexes of all timers when one is removed or use a uuid to find timer to remove.
-        removeButton.addEventListener("click", () => removeTimer(timerIndex));
+        removeButton.addEventListener("click", () => removeTimer(timerUUID));
       }
 
-      function removeTimer(index) {
+      function removeTimer(uuid) {
         if (isRunning) return; // Prevent removal while timers are running
 
-        timers.splice(index, 1);
-        timerInputsContainer.removeChild(timerInputsContainer.children[index]);
+        const timerIndex = timers.findIndex((timer) => timer.id === uuid);
+        if (timerIndex === -1) return;
 
-        // Update the labels and data-index attributes of remaining timers
-        for (let i = index; i < timers.length; i++) {
-          const timerElement = timerInputsContainer.children[i];
-          const label = timerElement.querySelector(`label`);
-          label.textContent = `Timer ${i + 1}:`;
-          label.id = `timerLabel${i}`;
-          timerElement.querySelector(".remove-timer").dataset.index = i;
+        timers.splice(timerIndex, 1);
+        const timerElement = timerInputsContainer.querySelector(
+          `[data-uuid="${uuid}"]`
+        );
+        if (timerElement) {
+          timerInputsContainer.removeChild(timerElement);
         }
+
+        // Update the labels of remaining timers
+        const timerElements =
+          timerInputsContainer.querySelectorAll(".timer-input");
+        timerElements.forEach((element, index) => {
+          const label = element.querySelector(`label`);
+          label.textContent = `Timer ${index + 1}:`;
+        });
 
         if (timers.length === 0) {
           resetTimers();
         } else if (currentTimerIndex >= timers.length) {
           currentTimerIndex = timers.length - 1;
-          timeLeft = timers[currentTimerIndex];
+          timeLeft = timers[currentTimerIndex].duration;
           updateDisplay();
         }
       }
@@ -167,7 +199,7 @@
         if (timers.length === 0 || isRunning) return;
         isRunning = true;
         currentTimerIndex = 0;
-        timeLeft = timers[0];
+        timeLeft = timers[0].duration;
         updateDisplay();
         runTimer();
         initAudio();
@@ -193,12 +225,12 @@
             }
           } else if (currentTimerIndex < timers.length - 1) {
             currentTimerIndex++;
-            timeLeft = timers[currentTimerIndex];
+            timeLeft = timers[currentTimerIndex].duration;
             updateDisplay();
             updateActiveTimer();
           } else if (loopCheckbox.checked) {
             currentTimerIndex = 0;
-            timeLeft = timers[0];
+            timeLeft = timers[0].duration;
             updateDisplay();
             updateActiveTimer();
           } else {
@@ -210,8 +242,8 @@
       function updateDisplay() {
         currentTimerDisplay.textContent = formatTime(timeLeft);
         const progress = isRunning
-          ? ((timers[currentTimerIndex] - timeLeft) /
-              timers[currentTimerIndex]) *
+          ? ((timers[currentTimerIndex].duration - timeLeft) /
+              timers[currentTimerIndex].duration) *
             100
           : 0;
         progressFill.style.width = `${progress}%`;
@@ -230,9 +262,9 @@
         document.querySelectorAll(".timer-input").forEach((input, index) => {
           const label = input.querySelector(`label`);
           if (index === currentTimerIndex && isRunning) {
-            label.classList.add("active-timer");
+            label.classList.add("text-green-500");
           } else {
-            label.classList.remove("active-timer");
+            label.classList.remove("text-green-500");
           }
         });
       }
