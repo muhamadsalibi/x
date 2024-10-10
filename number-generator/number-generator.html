@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Random Number Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded shadow-md max-w-md w-full">
+      <h1 class="text-2xl font-bold text-center mb-6">
+        Random Number Generator
+      </h1>
+
+      <!-- Minimum Value Slider -->
+      <label class="block text-gray-700 font-semibold mb-2" for="minRange"
+        >Minimum Value: <span id="minDisplay">0</span></label
+      >
+      <input
+        id="minRange"
+        type="range"
+        min="-1000"
+        max="1000"
+        step="10"
+        value="0"
+        class="w-full mb-4"
+        oninput="updateMinDisplay(this.value)"
+      />
+
+      <!-- Maximum Value Slider -->
+      <label class="block text-gray-700 font-semibold mb-2" for="maxRange"
+        >Maximum Value: <span id="maxDisplay">0</span></label
+      >
+      <input
+        id="maxRange"
+        type="range"
+        min="-1000"
+        max="1000"
+        step="10"
+        value="0"
+        class="w-full mb-4"
+        oninput="updateMaxDisplay(this.value)"
+      />
+
+      <!-- Factor Slider -->
+      <label class="block text-gray-700 font-semibold mb-2" for="factorRange"
+        >Factor: <span id="factorDisplay">1</span></label
+      >
+      <input
+        id="factorRange"
+        type="range"
+        min="1"
+        max="100"
+        value="1"
+        class="w-full mb-4"
+        oninput="updateFactorDisplay(this.value)"
+      />
+
+      <!-- Generate Button -->
+      <button
+        onclick="generateRandomNumber()"
+        class="bg-blue-500 text-white font-bold py-2 px-4 rounded w-full"
+      >
+        Generate Random Number
+      </button>
+
+      <!-- Result Display -->
+      <div class="mt-6 text-center">
+        <p class="text-lg font-semibold">Generated Number:</p>
+        <p id="result" class="text-3xl font-bold text-blue-700 mt-2">0</p>
+      </div>
+    </div>
+
+    <script>
+      // Function to update displayed minimum value
+      function updateMinDisplay(value) {
+        document.getElementById("minDisplay").textContent = value;
+      }
+
+      // Function to update displayed maximum value
+      function updateMaxDisplay(value) {
+        document.getElementById("maxDisplay").textContent = value;
+      }
+
+      // Function to update displayed factor
+      function updateFactorDisplay(value) {
+        document.getElementById("factorDisplay").textContent = value;
+      }
+
+      // Function to generate random number based on inputs
+      function generateRandomNumber() {
+        let min = parseFloat(document.getElementById("minRange").value);
+        let max = parseFloat(document.getElementById("maxRange").value);
+        let factor = parseFloat(document.getElementById("factorRange").value);
+
+        // Ensure min < max
+        if (min > max) {
+          [min, max] = [max, min];
+        }
+
+        // Generate random number between min and max
+        let randomNum = Math.random() * (max - min) + min;
+
+        // Adjust to be a multiple of the factor
+        randomNum = Math.round(randomNum / factor) * factor;
+
+        // Display the result
+        document.getElementById("result").textContent = randomNum;
+      }
+    </script>
+  </body>
+</html>
