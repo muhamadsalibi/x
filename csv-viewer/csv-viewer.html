@@ -45,7 +45,7 @@
     <div id="drop-area">Drop CSV file here or click to upload</div>
     <input type="file" id="file-input" accept=".csv" style="display: none" />
     <div id="file-name"></div>
-    <div id="table-container"></div>
+    <div id="table-container" style="overflow: scroll"></div>
 
     <script>
       const dropArea = document.getElementById("drop-area");
@@ -122,6 +122,33 @@
         const tbody = document.createElement("tbody");
         if (data.length > 0) {
           const headers = data[0];
+
+          // Create index header row (0, 1, 2, ...)
+          const indexRow = document.createElement("tr");
+          const indexOrderCell = document.createElement("th");
+          indexOrderCell.textContent = "#";
+          indexRow.appendChild(indexOrderCell);
+          headers.forEach((_, index) => {
+            const th = document.createElement("th");
+            th.textContent = index;
+            th.style.backgroundColor = "#e6f3ff";
+            indexRow.appendChild(th);
+          });
+          thead.appendChild(indexRow);
+
+          // Create letter header row (A, B, C, ...)
+          const letterRow = document.createElement("tr");
+          const letterOrderCell = document.createElement("th");
+          letterOrderCell.textContent = "#";
+          letterRow.appendChild(letterOrderCell);
+          headers.forEach((_, index) => {
+            const th = document.createElement("th");
+            th.textContent = String.fromCharCode(65 + index);
+            th.style.backgroundColor = "#fff0f0";
+            letterRow.appendChild(th);
+          });
+          thead.appendChild(letterRow);
+
           const headerRow = document.createElement("tr");
 
           // Add Order Column Header
